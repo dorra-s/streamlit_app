@@ -1,197 +1,316 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[3]:
-
-import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-#from ydata_profiling import ProfileReport
-#get_ipython().run_line_magic('matplotlib', 'inline')
+import seaborn as sns
+import matplotlib.ticker as mtick
+import plotly.graph_objects as go
+import streamlit as st
+from PIL import Image
 
-# Set the title of the page
-#st.title(":orange_book: Dataset General Configuration")
-st.markdown('<h1 style="color: orange;">Dataset General Configuration</h1>', unsafe_allow_html=True)
+# Function to load data
+@st.cache
+def load_data():
+    df_InfoUser = pd.read_csv('/media/dorra/62207C0F207BE885/Users/ASUS/Desktop/archive/Info_UserData.csv')
+    df_LogProblem = pd.read_csv('/media/dorra/62207C0F207BE885/Users/ASUS/Desktop/archive/Log_Problem.csv', nrows=10000)
+    df_InfoContent = pd.read_csv('/media/dorra/62207C0F207BE885/Users/ASUS/Desktop/archive/Info_Content.csv')
+    return df_InfoUser, df_LogProblem, df_InfoContent
 
-# In[4]:
+# Load the data
+df_InfoUser, df_LogProblem, df_InfoContent = load_data()
 
+# Streamlit app code starts here
+st.title('Dataset General Configuration')
 
-df_InfoUser  = pd.read_csv(r'C:\Users\ASUS\Desktop\archive\Info_UserData.csv')
-df_LogProblem = pd.read_csv(r'C:\Users\ASUS\Desktop\archive\Log_Problem.csv',nrows=10000)
-df_InfoContent = pd.read_csv(r'C:\Users\ASUS\Desktop\archive\Info_Content.csv')
-
-
-# In[4]:
-
-
-# Display the shape of the dataframes
-st.write(f"The shape of df_InfoUser is: {df_InfoUser.shape}")
-st.write(f"The shape of df_LogProblem is: {df_LogProblem.shape}")
-st.write(f"The shape of df_InfoContent is: {df_InfoContent.shape}")
-
-# # Data Cleaning
-
-# ## 1_Check for missing values:
-
-# In[26]:
-
-
+# Data Cleaning
+st.header('Data Cleaning')
 
 # Check for missing values
+st.subheader('1. Check for Missing Values')
+
+# Your code for checking missing values goes here
 missing_values_InfoUser = df_InfoUser.isnull().sum()
 missing_values_LogProblem = df_LogProblem.isnull().sum()
 missing_values_InfoContent = df_InfoContent.isnull().sum()
 
-st.write("Missing values in Info_UserData.csv:")
-st.write(missing_values_InfoUser)
+total_rows_InfoUser = len(df_InfoUser)
+total_rows_LogProblem = len(df_LogProblem)
+total_rows_InfoContent = len(df_InfoContent)
 
-st.write("Missing values in Log_Problem.csv:")
-st.write(missing_values_LogProblem)
+percentage_missing_InfoUser = (missing_values_InfoUser / total_rows_InfoUser) * 100
+percentage_missing_LogProblem = (missing_values_LogProblem / total_rows_LogProblem) * 100
+percentage_missing_InfoContent = (missing_values_InfoContent / total_rows_InfoContent) * 100
 
-st.write("Missing values in Info_Content.csv:")
-st.write(missing_values_InfoContent)
+filtered_missing_InfoUser = percentage_missing_InfoUser[percentage_missing_InfoUser > 1]
+filtered_missing_LogProblem = percentage_missing_LogProblem[percentage_missing_LogProblem > 1]
+filtered_missing_InfoContent = percentage_missing_InfoContent[percentage_missing_InfoContent > 1]
 
+plt.figure(figsize=(12, 6))
+plt.bar(filtered_missing_InfoUser.index, filtered_missing_InfoUser, label='Info_UserData.csv', color='blue', alpha=0.6)
+plt.bar(filtered_missing_LogProblem.index, filtered_missing_LogProblem, label='Log_Problem.csv', color='orange', alpha=0.6)
+plt.bar(filtered_missing_InfoContent.index, filtered_missing_InfoContent, label='Info_Content.csv', color='green', alpha=0.6)
+plt.xlabel('Columns')
+plt.ylabel('Percentage of Missing Values')
+plt.xticks(rotation=90)
+plt.gca().yaxis.set_major_formatter(mtick.PercentFormatter())
 
-# ## 2_Check for outliers:
+for i, v in enumerate(filtered_missing_InfoUser):
+    plt.text(i, v, f"{v:.2f}%", ha='center', va='bottom', color='blue', fontweight='bold')
 
-# In[24]:
+for i, v in enumerate(filtered_missing_LogProblem):
+    plt.text(i + len(filtered_missing_InfoUser), v, f"{v:.2f}%", ha='center', va='bottom', color='orange', fontweight='bold')
 
+for i, v in enumerate(filtered_missing_InfoContent):
+    plt.text(i + len(filtered_missing_InfoUser) + len(filtered_missing_LogProblem), v, f"{v:.2f}%", ha='center', va='bottom', color='green', fontweight='bold')
 
-# df_InfoUser:
-# Create a figure with multiple subplots
-fig1, axs = plt.subplots(2, 4, figsize=(15, 20))
-
-axs = axs.flatten()
-
-# Plot box plot for Info_UserData.csv
-axs[0].boxplot(df_InfoUser['points'])
-axs[0].set_title("Box plot of " + 'points')
-
-axs[1].boxplot(df_InfoUser['badges_cnt'])
-axs[1].set_title("Box plot of " + 'badges_cnt')
-
-axs[2].boxplot(df_InfoUser['user_grade' ])
-axs[2].set_title("Box plot of " + 'user_grade' )
-
-axs[3].boxplot(df_InfoUser['has_student_cnt' ])
-axs[3].set_title("Box plot of " + 'has_student_cnt' )
-
-axs[4].boxplot(df_InfoUser['has_teacher_cnt' ])
-axs[4].set_title("Box plot of " + 'has_teacher_cnt' )
-
-#axs[5].boxplot(df_InfoUser['used_hint_cnt' ])
-#axs[5].set_title("Box plot of " + 'used_hint_cnt' )
-
-#axs[6].boxplot(df_InfoUser['has_class_cnt' ])
-#axs[6].set_title("Box plot of " + 'has_class_cnt' )
-
-# Adjust the spacing between subplots
+plt.legend()
 plt.tight_layout()
-st.pyplot(fig1)
+st.pyplot()
 
-# Display the figure with multiple box plots
-#plt.show()
+# Check for outliers
+st.subheader('2. Check for Outliers')
+
+# InfoUser
+outlier_columns_info_user = ['has_teacher_cnt', 'has_student_cnt']
+
+plt.figure(figsize=(10, 6))
+
+for i, col in enumerate(outlier_columns_info_user, 1):
+    plt.subplot(1, 2, i)
+    sns.stripplot(x=df_InfoUser[col], jitter=True, color='blue', alpha=0.7)
+    plt.xlabel(col)
+    plt.title(f'Strip Plot - {col}')
+    plt.tight_layout()
+
+st.pyplot()
+
+# LogProblem
+outlier_columns_log_problem = ['total_sec_taken', 'total_attempt_cnt', 'used_hint_cnt']
+
+plt.figure(figsize=(12, 6))
+
+for i, col in enumerate(outlier_columns_log_problem, 1):
+    plt.subplot(1, 3, i)
+    sns.stripplot(x=df_LogProblem[col], jitter=True, color='green', alpha=0.7)
+    plt.xlabel(col)
+    plt.title(f'Strip Plot - {col}')
+    plt.tight_layout()
+
+st.pyplot()
+
+# Display insights
+st.subheader('Insights:')
+st.markdown("""
+1. **High Values in has_teacher_cnt:** Users with a high number of teachers might indicate that they are part of special programs, advanced courses, or mentorship arrangements. These users could be receiving personalized attention and guidance, which might result in higher engagement and better academic performance.
+
+2. **Low Values in has_teacher_cnt:** Users with a low number of teachers might represent independent learners who are not enrolled in formal classes or courses with assigned teachers. They might be using the platform for self-paced learning or might have limited access to teacher support.
+
+3. **High Values in has_student_cnt:** Users with a high number of students might be teachers or tutors who are using the platform to manage and support a large group of students. They might be educators who utilize the platform to assign exercises, track progress, and provide feedback to their students.
+
+4. **Low Values in has_student_cnt:** Users with a low number of students might indicate individual learners or users who have not yet started interacting with the platform as teachers. It could also represent users who are mainly focused on their own learning and have not taken on a teaching role.
+
+5. **Inconsistencies in has_teacher_cnt and has_student_cnt:** Anomalies in both columns might reveal inconsistencies in user roles. For example, users with high has_student_cnt but low has_teacher_cnt might be unusual and could indicate data entry errors or inconsistencies in user roles.
+""")
+
+# Filter the data for 'has_teacher_cnt' and 'has_student_cnt'
+has_teacher_cnt_values = df_InfoUser['has_teacher_cnt']
+has_student_cnt_values = df_InfoUser['has_student_cnt']
+
+# Create a scatter plot
+fig, ax = plt.subplots(figsize=(8, 6))
+sns.scatterplot(x=has_teacher_cnt_values, y=has_student_cnt_values, color='blue', alpha=0.5, ax=ax)
+plt.xlabel('Number of Teachers')
+plt.ylabel('Number of Students')
+plt.title('Relationship between has_teacher_cnt and has_student_cnt')
+plt.grid(True)
+
+# Display the plot using Streamlit
+st.pyplot(fig)
 
 
-# In[30]:
+# Select the columns with numerical data that are considered to have anomalous outliers
+outlier_columns = ['total_sec_taken', 'total_attempt_cnt', 'used_hint_cnt']
 
+# Create strip plots to visualize outliers
+fig, axs = plt.subplots(1, 3, figsize=(12, 6))
 
-#df_Log_Problem:
-# Create a figure with multiple subplots
-fig2, axs = plt.subplots(2, 3, figsize=(15, 20))
+for i, col in enumerate(outlier_columns, 1):
+    sns.stripplot(x=df_LogProblem[col], jitter=True, color='green', alpha=0.7, ax=axs[i-1])
+    axs[i-1].set_xlabel(col)
+    axs[i-1].set_title(f'Strip Plot - {col}')
+    plt.tight_layout()
 
-axs = axs.flatten()
+# Display the plots using Streamlit
+st.pyplot(fig)
 
-# Plot box plot for Info_UserData.csv
+# Display insights
+st.subheader('Insights:')
+st.markdown("""
+INSIGHTS:
+1_Outliers in 'total_sec_taken': The outliers in this column represent instances where users spent an unusually long time attempting a particular problem. Possible insights from these outliers could include:
 
-axs[0].boxplot(df_LogProblem['used_hint_cnt'])
-axs[0].set_title("Box plot of " + 'used_hint_cnt')
+   .Users who faced challenging or complex problems and took more time to solve them.
+   .Users who encountered technical issues or distractions that prolonged their problem-solving time.
+   .Users who intentionally spent more time on exercises to improve their understanding or practice specific skills.
 
-axs[1].boxplot(df_LogProblem['problem_number'])
-axs[1].set_title("Box plot of " + 'problem_number')
+2_Outliers in 'total_attempt_cnt': The outliers in this column indicate instances where users made an exceptionally high number of attempts to solve a problem. Insights from these outliers might include:
 
-axs[2].boxplot(df_LogProblem['exercise_problem_repeat_session' ])
-axs[2].set_title("Box plot of " + 'exercise_problem_repeat_session' )
+   .Users who struggled with specific exercises and made multiple attempts to find the correct solution.
+   .Users who engaged in iterative learning, trying different approaches or strategies to solve the problem.
+   .Users who might be highly persistent or determined to master a certain concept or topic.
 
-axs[3].boxplot(df_LogProblem['total_sec_taken' ])
-axs[3].set_title("Box plot of " + 'total_sec_taken' )
+3_Outliers in 'used_hint_cnt': The outliers in this column represent users who used a significant number of hints for a particular problem. Potential insights related to these outliers could be:
 
-axs[4].boxplot(df_LogProblem['total_attempt_cnt' ])
-axs[4].set_title("Box plot of " + 'total_attempt_cnt' )
+   .Users who faced difficult exercises and relied heavily on hints to progress.
+   .Users who might need additional support or personalized assistance in understanding the material.
+   .Users who could be leveraging hints strategically to optimize their learning experience.
 
-axs[5].boxplot(df_LogProblem['level' ])
-axs[5].set_title("Box plot of " + 'level' )
+Understanding the reasons behind these outliers can help Junyi Academy tailor their platform and learning resources to better support users with varying learning needs. For example:
 
+For users who spend a long time on exercises, the platform could provide additional resources or adaptive content to address knowledge gaps.
 
-# Adjust the spacing between subplots
-plt.tight_layout()
+For users who make numerous attempts, the platform could offer targeted feedback or adaptive hints to guide their learning journey effectively.
 
-# Display the figure with multiple box plots
-st.pyplot(fig2)
+For users who use many hints, the platform could provide more context-specific explanations or personalized learning paths.
 
+4_Users with 0 'total_sec_taken': Users with a total_sec_taken of 0 likely indicate instances where the users did not spend any time attempting the problem. Insights from these cases might include:
 
-# # The distribution of students across different learning stages:
+   .Users who accessed the problem but did not engage in any interaction, possibly indicating a lack of interest or motivation.
+   .Users who navigated to the problem but left the platform or session before attempting it.
+5_Users with 0 'total_attempt_cnt': Users with a total_attempt_cnt of 0 likely indicate cases where the users did not make any attempts to solve the problem. Insights from these cases could include:
 
-# In[5]:
+   .Users who accessed the problem but did not actively interact or attempt to solve it.
+   .Users who might have skipped or ignored the problem intentionally.
 
+Possible actions or improvements could include:
 
-learning_stage_distribution =df_InfoContent['learning_stage'].value_counts()
-st.write("Learning stage distribution:")
-st.write(learning_stage_distribution)
+  Identifying potential usability issues or design flaws in the platform that might discourage users from attempting or interacting with problems.
 
+  Providing additional guidance or incentives to encourage users to actively attempt more problems and engage in learning activities.
+""")
+            
+# Filter users with 0 seconds taken or 0 attempt count
+zero_sec_taken = df_LogProblem[df_LogProblem['total_sec_taken'] == 0]
+zero_attempt_cnt = df_LogProblem[df_LogProblem['total_attempt_cnt'] == 0]
 
-# # The distribution of difficulties of the exercises:
+# Count the number of users with 0 seconds taken and their number of used hints
+zero_sec_taken_hint_count = zero_sec_taken['used_hint_cnt'].value_counts()
+zero_attempt_cnt_hint_count = zero_attempt_cnt['used_hint_cnt'].value_counts()
 
-# In[6]:
+# Create a plot for users with 0 seconds taken
+plt.figure(figsize=(10, 6))
+plt.subplot(1, 2, 1)
+plt.bar(zero_sec_taken_hint_count.index, zero_sec_taken_hint_count.values)
+plt.xlabel('Number of Used Hints')
+plt.ylabel('Number of Users')
+plt.title('Number of Users with 0 Seconds Taken')
 
+# Create a plot for users with 0 attempt count
+plt.subplot(1, 2, 2)
+plt.bar(zero_attempt_cnt_hint_count.index, zero_attempt_cnt_hint_count.values)
+plt.xlabel('Number of Used Hints')
+plt.ylabel('Number of Users')
+plt.title('Number of Users with 0 Attempt Count')
 
+# Display the plots using Streamlit
+st.pyplot(plt)
+
+import streamlit as st
+import matplotlib.pyplot as plt
+
+# Define the threshold for high 'total_sec_taken' and 'total_attempt_cnt'
+sec_taken_threshold = df_LogProblem['total_sec_taken'].quantile(0.75)
+attempt_cnt_threshold = df_LogProblem['total_attempt_cnt'].quantile(0.75)
+
+# Filter users with high 'total_sec_taken' and their number of used hints
+high_sec_taken_users = df_LogProblem[df_LogProblem['total_sec_taken'] > sec_taken_threshold]
+high_sec_taken_hint_count = high_sec_taken_users['used_hint_cnt'].value_counts()
+
+# Filter users with high 'total_attempt_cnt' and their number of used hints
+high_attempt_cnt_users = df_LogProblem[df_LogProblem['total_attempt_cnt'] > attempt_cnt_threshold]
+high_attempt_cnt_hint_count = high_attempt_cnt_users['used_hint_cnt'].value_counts()
+
+# Create a plot for users with high 'total_sec_taken'
+plt.figure(figsize=(12, 6))
+plt.subplot(1, 2, 1)
+plt.bar(high_sec_taken_hint_count.index, high_sec_taken_hint_count.values, color='purple')
+plt.xlabel('Number of Used Hints')
+plt.ylabel('Number of Users')
+plt.title('Number of Users with High total_sec_taken')
+
+# Create a plot for users with high 'total_attempt_cnt'
+plt.subplot(1, 2, 2)
+plt.bar(high_attempt_cnt_hint_count.index, high_attempt_cnt_hint_count.values, color='purple')
+plt.xlabel('Number of Used Hints')
+plt.ylabel('Number of Users')
+plt.title('Number of Users with High total_attempt_cnt')
+
+# Display the plots using Streamlit
+st.pyplot(plt)
+
+# The distribution of students across different learning stages
+st.subheader('The distribution of students across different learning stages')
+
+# Your code for plotting the distribution goes here
+learning_stages_count = df_InfoContent['learning_stage'].value_counts()
+total_students = len(df_InfoContent)
+percentage_per_stage = (learning_stages_count / total_students) * 100
+
+fig = go.Figure(data=[go.Bar(x=learning_stages_count.index, y=learning_stages_count.values)])
+for i in range(len(learning_stages_count)):
+    value_count = learning_stages_count.values[i]
+    percentage = percentage_per_stage.values[i]
+    text = f"{value_count} ({percentage:.2f}%)"
+    fig.add_annotation(x=learning_stages_count.index[i], y=learning_stages_count.values[i], text=text, showarrow=True, arrowhead=1)
+
+fig.update_layout(title='Distribution of Students Across Learning Stages', xaxis_title='Learning Stage', yaxis_title='Number of Students', showlegend=False)
+
+st.plotly_chart(fig)
+
+# Specify the path to the image file
+image_path = '/home/dorra/Pictures/3.png'
+
+# Display the image
+image = Image.open(image_path)
+st.image(image, caption='Caption for the Image', use_column_width=True)
+
+# The distribution of difficulties of the exercises
+st.subheader('The distribution of difficulties of the exercises')
+
+# Your code for plotting the distribution goes here
 difficulty_distribution = df_InfoContent['difficulty'].value_counts()
-st.write("Difficulty distribution:")
-st.write(difficulty_distribution)
+colors = ['blue', 'green', 'orange', 'red']
+fig = go.Figure(data=[go.Pie(labels=difficulty_distribution.index, values=difficulty_distribution.values, marker=dict(colors=colors))])
+fig.update_layout(title='Distribution of Difficulties of Exercises')
+st.plotly_chart(fig)
 
-# # Total of exercises:
+# The number of students who have attempted to answer the problems in the exercises
+st.subheader('The number of students who have attempted to answer the problems in the exercises')
 
-# In[7]:
-
-
-total_exercises = len(df_InfoContent)
-st.write("Total number of exercises:")
-st.write(total_exercises)
-
-# # The number of students who have attempted to answer the problems in the exercises:
-
-# In[9]:
-
-
+# Your code for displaying the number of students goes here
 unique_students_attempted = df_LogProblem['uuid'].nunique()
-st.write("unique_students_attempted:")
 st.write(unique_students_attempted)
 
+# The average number of problems in a single exercise
+st.subheader('The average number of problems in a single exercise')
 
-# #  The average number of problems in a single exercise:
+# Calculate the average number of problems per exercise
+average_occurrences_per_exercise = int(df_LogProblem.groupby('ucid').size().mean())
 
-# In[10]:
+# Print the information using Streamlit
+st.write("Total Number of Exercises:", len(df_InfoContent['ucid']))
+st.write("Total Number of Problem attempts:", len(df_LogProblem['ucid']))
+st.write("Total Number of Exercise attempts:", df_LogProblem['ucid'].nunique())
+st.write("Average Number of Problems per Exercise:", average_occurrences_per_exercise)
 
+# Calculate the average number of hints used per student per exercise
+average_hints_per_student = int(df_LogProblem.groupby(['ucid', 'uuid'])['used_hint_cnt'].size().mean())
 
-average_problems_per_exercise = len(df_InfoContent) / df_InfoContent['ucid'].nunique()
-st.write("average_problems_per_exercise:")
-st.write(average_problems_per_exercise)
+# Print the result using Streamlit
+st.write("Average Number of Hints Used per Student per Exercise:", average_hints_per_student)
 
+# Calculate the average number of attempts per student per exercise
+average_attempts_per_student = int(df_LogProblem.groupby(['uuid', 'ucid'])['total_attempt_cnt'].size().mean())
 
-# #  The average number of hints used per student per exercise:
-
-# In[11]:
-
-
-average_hints_per_student = df_LogProblem.groupby(['uuid', 'ucid'])['used_hint_cnt'].mean().mean()
-st.write("average_hints_per_student:")
-st.write(average_hints_per_student)
-
-# #  The average number of attempts per student per exercise:
-
-# In[12]:
+# Print the result using Streamlit
+st.write("Average Number of Attempts per Student per Exercise:", average_attempts_per_student)
 
 
-average_attempts_per_student = df_LogProblem.groupby(['uuid', 'ucid'])['total_attempt_cnt'].mean().mean()
-st.write("average_attempts_per_student:")
-st.write(average_attempts_per_student)
