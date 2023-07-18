@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 import streamlit as st
 from PIL import Image
 
-# Function to load data
+# Load data
 @st.cache
 def load_data():
     df_InfoUser = pd.read_csv('/media/dorra/62207C0F207BE885/Users/ASUS/Desktop/archive/Info_UserData.csv')
@@ -14,10 +14,10 @@ def load_data():
     df_InfoContent = pd.read_csv('/media/dorra/62207C0F207BE885/Users/ASUS/Desktop/archive/Info_Content.csv')
     return df_InfoUser, df_LogProblem, df_InfoContent
 
-# Load the data
+
 df_InfoUser, df_LogProblem, df_InfoContent = load_data()
 
-# Streamlit app code starts here
+
 st.title('Dataset General Configuration')
 
 # Data Cleaning
@@ -26,7 +26,7 @@ st.header('Data Cleaning')
 # Check for missing values
 st.subheader('1. Check for Missing Values')
 
-# Your code for checking missing values goes here
+
 missing_values_InfoUser = df_InfoUser.isnull().sum()
 missing_values_LogProblem = df_LogProblem.isnull().sum()
 missing_values_InfoContent = df_InfoContent.isnull().sum()
@@ -114,7 +114,6 @@ st.markdown("""
 has_teacher_cnt_values = df_InfoUser['has_teacher_cnt']
 has_student_cnt_values = df_InfoUser['has_student_cnt']
 
-# Create a scatter plot
 fig, ax = plt.subplots(figsize=(8, 6))
 sns.scatterplot(x=has_teacher_cnt_values, y=has_student_cnt_values, color='blue', alpha=0.5, ax=ax)
 plt.xlabel('Number of Teachers')
@@ -122,14 +121,12 @@ plt.ylabel('Number of Students')
 plt.title('Relationship between has_teacher_cnt and has_student_cnt')
 plt.grid(True)
 
-# Display the plot using Streamlit
 st.pyplot(fig)
 
 
 # Select the columns with numerical data that are considered to have anomalous outliers
 outlier_columns = ['total_sec_taken', 'total_attempt_cnt', 'used_hint_cnt']
 
-# Create strip plots to visualize outliers
 fig, axs = plt.subplots(1, 3, figsize=(12, 6))
 
 for i, col in enumerate(outlier_columns, 1):
@@ -138,7 +135,6 @@ for i, col in enumerate(outlier_columns, 1):
     axs[i-1].set_title(f'Strip Plot - {col}')
     plt.tight_layout()
 
-# Display the plots using Streamlit
 st.pyplot(fig)
 
 # Display insights
@@ -195,7 +191,7 @@ zero_attempt_cnt = df_LogProblem[df_LogProblem['total_attempt_cnt'] == 0]
 zero_sec_taken_hint_count = zero_sec_taken['used_hint_cnt'].value_counts()
 zero_attempt_cnt_hint_count = zero_attempt_cnt['used_hint_cnt'].value_counts()
 
-# Create a plot for users with 0 seconds taken
+# plot for users with 0 seconds taken
 plt.figure(figsize=(10, 6))
 plt.subplot(1, 2, 1)
 plt.bar(zero_sec_taken_hint_count.index, zero_sec_taken_hint_count.values)
@@ -203,32 +199,31 @@ plt.xlabel('Number of Used Hints')
 plt.ylabel('Number of Users')
 plt.title('Number of Users with 0 Seconds Taken')
 
-# Create a plot for users with 0 attempt count
+# plot for users with 0 attempt count
 plt.subplot(1, 2, 2)
 plt.bar(zero_attempt_cnt_hint_count.index, zero_attempt_cnt_hint_count.values)
 plt.xlabel('Number of Used Hints')
 plt.ylabel('Number of Users')
 plt.title('Number of Users with 0 Attempt Count')
 
-# Display the plots using Streamlit
 st.pyplot(plt)
 
 import streamlit as st
 import matplotlib.pyplot as plt
 
-# Define the threshold for high 'total_sec_taken' and 'total_attempt_cnt'
+# high 'total_sec_taken' and 'total_attempt_cnt'
 sec_taken_threshold = df_LogProblem['total_sec_taken'].quantile(0.75)
 attempt_cnt_threshold = df_LogProblem['total_attempt_cnt'].quantile(0.75)
 
-# Filter users with high 'total_sec_taken' and their number of used hints
+# users with high 'total_sec_taken' and their number of used hints
 high_sec_taken_users = df_LogProblem[df_LogProblem['total_sec_taken'] > sec_taken_threshold]
 high_sec_taken_hint_count = high_sec_taken_users['used_hint_cnt'].value_counts()
 
-# Filter users with high 'total_attempt_cnt' and their number of used hints
+# users with high 'total_attempt_cnt' and their number of used hints
 high_attempt_cnt_users = df_LogProblem[df_LogProblem['total_attempt_cnt'] > attempt_cnt_threshold]
 high_attempt_cnt_hint_count = high_attempt_cnt_users['used_hint_cnt'].value_counts()
 
-# Create a plot for users with high 'total_sec_taken'
+# plot for users with high 'total_sec_taken'
 plt.figure(figsize=(12, 6))
 plt.subplot(1, 2, 1)
 plt.bar(high_sec_taken_hint_count.index, high_sec_taken_hint_count.values, color='purple')
@@ -236,20 +231,18 @@ plt.xlabel('Number of Used Hints')
 plt.ylabel('Number of Users')
 plt.title('Number of Users with High total_sec_taken')
 
-# Create a plot for users with high 'total_attempt_cnt'
+# plot for users with high 'total_attempt_cnt'
 plt.subplot(1, 2, 2)
 plt.bar(high_attempt_cnt_hint_count.index, high_attempt_cnt_hint_count.values, color='purple')
 plt.xlabel('Number of Used Hints')
 plt.ylabel('Number of Users')
 plt.title('Number of Users with High total_attempt_cnt')
 
-# Display the plots using Streamlit
 st.pyplot(plt)
 
 # The distribution of students across different learning stages
 st.subheader('The distribution of students across different learning stages')
 
-# Your code for plotting the distribution goes here
 learning_stages_count = df_InfoContent['learning_stage'].value_counts()
 total_students = len(df_InfoContent)
 percentage_per_stage = (learning_stages_count / total_students) * 100
@@ -265,17 +258,14 @@ fig.update_layout(title='Distribution of Students Across Learning Stages', xaxis
 
 st.plotly_chart(fig)
 
-# Specify the path to the image file
+# Learning stages image
 image_path = '/home/dorra/Pictures/3.png'
-
-# Display the image
 image = Image.open(image_path)
 st.image(image, caption='Caption for the Image', use_column_width=True)
 
 # The distribution of difficulties of the exercises
 st.subheader('The distribution of difficulties of the exercises')
 
-# Your code for plotting the distribution goes here
 difficulty_distribution = df_InfoContent['difficulty'].value_counts()
 colors = ['blue', 'green', 'orange', 'red']
 fig = go.Figure(data=[go.Pie(labels=difficulty_distribution.index, values=difficulty_distribution.values, marker=dict(colors=colors))])
@@ -285,7 +275,6 @@ st.plotly_chart(fig)
 # The number of students who have attempted to answer the problems in the exercises
 st.subheader('The number of students who have attempted to answer the problems in the exercises')
 
-# Your code for displaying the number of students goes here
 unique_students_attempted = df_LogProblem['uuid'].nunique()
 st.write(unique_students_attempted)
 
@@ -304,13 +293,11 @@ st.write("Average Number of Problems per Exercise:", average_occurrences_per_exe
 # Calculate the average number of hints used per student per exercise
 average_hints_per_student = int(df_LogProblem.groupby(['ucid', 'uuid'])['used_hint_cnt'].size().mean())
 
-# Print the result using Streamlit
 st.write("Average Number of Hints Used per Student per Exercise:", average_hints_per_student)
 
 # Calculate the average number of attempts per student per exercise
 average_attempts_per_student = int(df_LogProblem.groupby(['uuid', 'ucid'])['total_attempt_cnt'].size().mean())
 
-# Print the result using Streamlit
 st.write("Average Number of Attempts per Student per Exercise:", average_attempts_per_student)
 
 
