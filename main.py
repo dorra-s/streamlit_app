@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[2]:
+# In[6]:
 
 
 import pandas as pd
@@ -15,35 +15,42 @@ import dask.dataframe as dd
 #/home/dorra/.local/bin/streamlit run main.py
 
 
-# In[3]:
+# In[8]:
 
 
-df_InfoUser  = dd.read_csv(r'/media/dorra/62207C0F207BE885/Users/ASUS/Desktop/archive/Info_UserData.csv')
-df_LogProblem = dd.read_csv(r'/media/dorra/62207C0F207BE885/Users/ASUS/Desktop/archive/Log_Problem.csv')
-df_InfoContent = dd.read_csv(r'/media/dorra/62207C0F207BE885/Users/ASUS/Desktop/archive/Info_Content.csv')
+df_InfoUser  = pd.read_csv(r'/media/dorra/62207C0F207BE885/Users/ASUS/Desktop/archive/Info_UserData.csv')
+df_LogProblem = pd.read_csv(r'/media/dorra/62207C0F207BE885/Users/ASUS/Desktop/archive/Log_Problem.csv',nrows=500000)
+df_InfoContent = pd.read_csv(r'/media/dorra/62207C0F207BE885/Users/ASUS/Desktop/archive/Info_Content.csv')
 
 
-# In[21]:
+# In[9]:
 
 
-shape_df_LogProblem = df_LogProblem.shape
-num_rows_df_LogProblem = shape_df_LogProblem[0].compute()
-num_columns_df_LogProblem = shape_df_LogProblem[1]
-
-shape_df_InfoUser= df_InfoUser.shape
-num_rows_df_InfoUser = shape_df_InfoUser[0].compute()
-num_columns_df_InfoUser = shape_df_InfoUser[1]
-
-shape_df_InfoContent= df_InfoContent.shape
-num_rows_df_InfoContent = shape_df_InfoContent[0].compute()
-num_columns_df_InfoContent = shape_df_InfoContent[1]
-
-print(f"the shape of df_InfoUser is: {num_rows_df_InfoUser}, {num_columns_df_InfoUser}")
-print(f"the shape of df_LogProblem is: ({num_rows_df_LogProblem}, {num_columns_df_LogProblem})")
-print(f"the shape of df_InfoContent is: {num_rows_df_InfoContent}, {num_columns_df_InfoContent}")
+print(f"the shape of df_InfoUser is: {df_InfoUser.shape}")
+print(f"the shape of df_LogProblem is: {df_LogProblem.shape}")
+print(f"the shape of df_InfoContent is: {df_InfoContent.shape}")
 
 
 # # Data Cleaning
+
+# In[14]:
+
+
+unique_uuids_in_logproblem = df_LogProblem['uuid'].unique()
+
+df_InfoUser= df_InfoUser[df_InfoUser['uuid'].isin(unique_uuids_in_logproblem)]
+
+print(f"The shape of df_InfoUser_filtered is: {df_InfoUser.shape}")
+
+# Get the unique UCIDs from the logproblem DataFrame
+unique_ucids_in_logproblem = df_LogProblem['ucid'].unique()
+
+# Filter the info content DataFrame to include only rows with UCIDs present in the logproblem DataFrame
+df_InfoContent= df_InfoContent[df_InfoContent['ucid'].isin(unique_ucids_in_logproblem)]
+
+# Now df_InfoContent_filtered contains only the rows of content that are in both logproblem and info content DataFrames
+print(f"The shape of df_InfoContent_filtered is: {df_InfoContent.shape}")
+
 
 # ## 1_Check for missing values:
 
@@ -92,11 +99,11 @@ plt.show()
 
 
 # INSIGHTS:
-# Impact on Recommendation Systems->remove Data?
+# Impact on Recommendation Systems->remove Data [is_downgrade, is_upgrade]
 
 # ## 2_Check for outliers:
 
-# In[6]:
+# In[23]:
 
 
 #InfoUser
@@ -107,16 +114,38 @@ not_self_coach =  users_with_zero_teachers_and_students[(users_with_zero_teacher
 
 num_not_self_coach = len(not_self_coach)
 
-print("has 0 students, 0 teachers and not self coach:",num_not_self_coach)
+print("users with 0 students, 0 teachers and not self coach:",num_not_self_coach)
+
+total_users = len(df_InfoUser)
+
+num_not_self_coach = len(not_self_coach)
+
+percentage_not_self_coach = (num_not_self_coach / total_users) * 100
+
+percentage_other_users = 100 - percentage_not_self_coach
+
+labels = ['0 students, 0 teachers, and not self-coach', 'Other users']
+values = [percentage_not_self_coach, percentage_other_users]
+layout = go.Layout(title="Percentage of Users with 0 students, 0 teachers, and not self-coach")
+
+fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.3)], layout=layout)
+
+fig.show()
 
 
-# In[6]:
+# INSIGHTS:
+# Users with grade or point > 0 are to be considered as Students
+# Propositions:
+# 1-Regression imputation
+# 2-Mean imputation
+
+# In[18]:
 
 
 #LogProblem
 df_zero_sec_taken = df_LogProblem[df_LogProblem['total_sec_taken'] == 0]
 
-num_users_with_zero_sec_taken = df_zero_sec_taken['uuid'].nunique().compute()
+num_users_with_zero_sec_taken = df_zero_sec_taken['uuid'].nunique()
 
 print("Number of users with 0 seconds taken:", num_users_with_zero_sec_taken)
 
@@ -136,7 +165,7 @@ print("Number of users with 0 seconds taken:", num_users_with_zero_sec_taken)
 
 # # The distribution of students across different learning stages:
 
-# In[121]:
+# In[24]:
 
 
 learning_stages_count = df_InfoContent['learning_stage'].value_counts()
@@ -168,7 +197,7 @@ fig.update_layout(
 fig.show()
 
 
-# In[38]:
+# In[25]:
 
 
 from IPython.display import Image
@@ -180,7 +209,7 @@ Image(filename=image_path)
 
 # # The distribution of difficulties of the exercises:
 
-# In[76]:
+# In[26]:
 
 
 import plotly.graph_objects as go
@@ -198,44 +227,44 @@ fig.show()
 
 # # The number of students who have attempted to answer the problems in the exercises:
 
-# In[20]:
+# In[28]:
 
 
-unique_students_attempted = df_LogProblem['uuid'].nunique().compute()
+unique_students_attempted = df_LogProblem['uuid'].nunique()
 print(unique_students_attempted)
 
 
 # #  The average number of problems in a single exercise:
 
-# In[24]:
+# In[30]:
 
 
-exercise_problem_counts = df_LogProblem.groupby('ucid')['problem_number'].nunique().compute()
+exercise_problem_counts = df_LogProblem.groupby('ucid')['problem_number'].nunique()
 
-average_problems_per_exercise = exercise_problem_counts.mean()
+average_problems_per_exercise = int(exercise_problem_counts.mean())
 
 print("Average number of problems in a single exercise:", average_problems_per_exercise)
 
 print("Total Number of Exercises:", len(df_InfoContent['ucid']))
 print("Total Number of Problem attempts:", len(df_LogProblem['ucid']))
-print("Total Number of Exercise attempts:", df_LogProblem['ucid'].nunique().compute())
+print("Total Number of Exercise attempts:", df_LogProblem['ucid'].nunique())
 
 
 # #  The average number of hints used per student per exercise:
 
-# In[26]:
+# In[36]:
 
 
-average_hints_per_student_per_exercise = df_LogProblem.groupby(['uuid', 'ucid', 'upid'])['used_hint_cnt'].mean().mean().compute()
+average_hints_per_student_per_exercise = int(df_LogProblem.groupby(['uuid', 'ucid'])['used_hint_cnt'].size().mean())
 
 print("Average number of hints used per student per exercise:", average_hints_per_student_per_exercise)
 
 
 # #  The average number of attempts per student per exercise:
 
-# In[35]:
+# In[38]:
 
 
 average_attempts_per_student = int(df_LogProblem.groupby(['uuid', 'ucid'])['total_attempt_cnt'].size().mean())
-print(average_attempts_per_student)
+print("Average number of attempts per student per exercise: ",average_attempts_per_student)
 
