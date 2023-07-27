@@ -111,7 +111,6 @@ st.pyplot(fig_missing_values)
 
 st.markdown("INSIGHTS: Impact on Recommendation Systems->remove Data [is_downgrade, is_upgrade]")
 
-st.markdown("<p style='{}'> 2_Check for outliers:</p>".format(markdown_style), unsafe_allow_html=True)
 
 # In[23]:
 
@@ -124,7 +123,7 @@ not_self_coach = users_with_zero_teachers_and_students[(users_with_zero_teachers
 
 num_not_self_coach = len(not_self_coach)
 
-st.write("Users with 0 students, 0 teachers, and not self-coach:", num_not_self_coach)
+st.write("## Users with 0 students, 0 teachers, and not self-coach:", num_not_self_coach)
 
 total_users = len(df_InfoUser)
 
@@ -143,13 +142,14 @@ fig = go.Figure(data=[go.Pie(labels=labels, values=values, hole=0.3)], layout=la
 st.plotly_chart(fig)
 
 st.markdown("INSIGHTS:")
-st.markdown("Users with grade or point > 0 are to be considered as Students")
+st.markdown("Users with grade or point > 0 are to be considered as Students or Self-Coach")
 st.markdown("Propositions:")
 st.markdown("1-Regression imputation")
 st.markdown("2-Mean imputation")
 
 # In[18]:
 
+st.markdown("<p style='{}'> 2_Check for outliers:</p>".format(markdown_style), unsafe_allow_html=True)
 
 #LogProblem
 df_zero_sec_taken = df_LogProblem[df_LogProblem['total_sec_taken'] == 0]
@@ -216,6 +216,7 @@ image_path = '/home/dorra/Pictures/3.png'
 image = open(image_path, 'rb').read()
 
 st.image(image, caption='Diffrent Learning Stages Levels')
+st.write("--> The data suggests that the majority of students who attended Junyi Academy Online Learning are in the younger age group, between 6 and 15 years old, comprising about 99% of the total student population")
 
 st.markdown("<p style='{}'> 4_The Distribution of Difficulties of Exercises : </p>".format(markdown_style), unsafe_allow_html=True)
 
@@ -256,9 +257,9 @@ st.markdown("## Summary of Exercise Data")
 
 st.write("Average number of problems in a single exercise:", average_problems_per_exercise)
 
-st.write("Total Number of Exercises:", len(df_InfoContent['ucid']))
-st.write("Total Number of Problem attempts:", len(df_LogProblem['ucid']))
-st.write("Total Number of Exercise attempts:", df_LogProblem['ucid'].nunique())
+st.write("-Total Number of Exercises:", len(df_InfoContent['ucid']))
+st.write("-Total Number of Problem attempts:", len(df_LogProblem['ucid']))
+st.write("-Total Number of Exercise attempts:", df_LogProblem['ucid'].nunique())
 
 
 # #  The average number of hints used per student per exercise:
