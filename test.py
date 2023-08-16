@@ -122,7 +122,6 @@ def main_content(selected_option, sub_option_a):
     plt.legend()
     st.pyplot(fig)
 
-    # Insights
     st.subheader("Insights:")
     st.write("Impact on Recommendation Systems -> Remove Data")
  
@@ -157,7 +156,6 @@ def main_content(selected_option, sub_option_a):
 
     st.write("We Have Users with 0 Sec Taken For About : " ,num_users_with_zero_sec_taken)
 
-    # Insights
     st.subheader("Insights:")
 
     st.write("""
@@ -183,7 +181,7 @@ def main_content(selected_option, sub_option_a):
    
    sub_option_a = st.sidebar.selectbox("Sub Option", ("Data Discovery", "Data Visualisation"))
 
-    # Display content based on selected sub option
+    
    if sub_option_a == "Data Discovery":
  
      # The distribution of students across different learning stages
@@ -213,7 +211,6 @@ def main_content(selected_option, sub_option_a):
      )
      st.plotly_chart(fig)
 
-
      image_path = '/home/dorra/Pictures/3.png'
      st.subheader("Diffrent Learning Stages in Taiwan:")
      image = Image.open(image_path)
@@ -233,6 +230,7 @@ def main_content(selected_option, sub_option_a):
 
      st.plotly_chart(fig)
 
+
      ###
 
 
@@ -245,17 +243,17 @@ def main_content(selected_option, sub_option_a):
      st.write("Total Number of Problem attempts: ", len(df_LogProblem['ucid']))
      st.write("Total Number of Exercise attempts: ", df_LogProblem['ucid'].nunique())
 
-
      # The average number of hints used per student per exercise
      average_hints_per_student_per_exercise = int(df_LogProblem.groupby(['uuid', 'ucid'])['used_hint_cnt'].size().mean())
      st.write("The average number of hints used per student per exercise: ",average_hints_per_student_per_exercise)
-
 
      # The average number of attempts per student per exercise
      average_attempts_per_student = int(df_LogProblem.groupby(['uuid', 'ucid'])['total_attempt_cnt'].size().mean())
      st.write("The average number of attempts per student per exercise: ",average_attempts_per_student)
     
+
      ###
+
 
      st.subheader("4. Distribution of Answer Correctness Across All Exercises :")
      correctness_counts = df_LogProblem['is_correct'].value_counts()
@@ -272,6 +270,7 @@ def main_content(selected_option, sub_option_a):
 
      ###
 
+
      st.subheader("5. Distribution of Proficiency Levels Across All Exercises :")
      level_counts = df_LogProblem['level'].value_counts()
 
@@ -284,7 +283,9 @@ def main_content(selected_option, sub_option_a):
 
      st.write("76% of exercises are at 0 level proficiency.")
 
+
      ###
+
 
      st.subheader("6. Points Distribution by User Grade :")
      energy_points_stats = df_InfoUser.groupby('user_grade')['points'].agg(['mean', 'max', 'min']).reset_index()
@@ -299,7 +300,9 @@ def main_content(selected_option, sub_option_a):
 
      st.write("Grades between 4 and 7 are the most performant students (Elementary).")
 
+
      ###
+
 
      st.subheader("7. Time Distribution of Attempts on Exercises :")
 
@@ -316,6 +319,7 @@ def main_content(selected_option, sub_option_a):
      st.write("The bulk of user activity is concentrated in the second semester of the school year, spanning from late February to June.")
  
    elif sub_option_a == "Data Visualisation" :
+         
          df_LogProblem['hint_used'] = df_LogProblem['used_hint_cnt'] > 0
          hint_users = df_LogProblem[df_LogProblem['hint_used'] == True]
          no_hint_users = df_LogProblem[df_LogProblem['hint_used'] == False]
@@ -342,21 +346,18 @@ def main_content(selected_option, sub_option_a):
                    yaxis_title='Average Time Taken (seconds)')
 
          st.plotly_chart(fig1)
-
          st.subheader("2. Effect of Using Hints on Average Time Taken :")
-
          st.plotly_chart(fig2)
-
          st.write("The provision of hints did not yield improvements in student performance as evidenced by their unaltered accuracy and problem-solving speed. It also shows that the hints might not be as helpful as intended")
+
 
          ###
 
+
          df_merged = df_LogProblem.merge(df_InfoContent[['ucid', 'difficulty']], on='ucid', how='left')
 
-         # Group data by difficulty level and level attended
          grouped = df_merged.groupby(['difficulty', 'level']).size().reset_index(name='count')
 
-         # Create a stacked bar plot
          st.subheader("3. Levels Attended by Users for Each Category of Exercises :")
          fig = px.bar(grouped, x='difficulty', y='count', color='level',
              labels={'difficulty': 'Difficulty', 'count': 'Number of Exercises'},
@@ -364,6 +365,7 @@ def main_content(selected_option, sub_option_a):
              barmode='stack')
 
          st.plotly_chart(fig)
+
          
          ###
 
@@ -372,35 +374,34 @@ def main_content(selected_option, sub_option_a):
 
          max_levels = df_LogProblem.groupby('uuid')['level'].max()
          exercise_counts = df_LogProblem.groupby(['uuid', 'level'])['ucid'].nunique()
-
-         # Count the number of users for each maximum level
          level_counts = max_levels.value_counts().sort_index()
 
-         # Create a bar plot for number of users with maximum level
+         # number of users with maximum level
          fig, axes = plt.subplots(1, 2, figsize=(12, 6))
 
          bars1 = axes[0].bar(level_counts.index, level_counts.values, color='purple')  # Change bar color to purple
          axes[0].set_xlabel('Maximum Level')
          axes[0].set_ylabel('Number of Users')
          axes[0].set_title('Number of Users with Maximum Level')
-         axes[0].set_xticks(range(5))  # Set x-axis ticks for levels 0 to 4
+         axes[0].set_xticks(range(5)) 
 
          for bar in bars1:
              yval = bar.get_height()
              axes[0].text(bar.get_x() + bar.get_width()/2, yval + 30, round(yval), ha='center', color='black', fontsize=10)
 
-         # Create a bar plot for number of exercises attended at maximum level
+         # number of exercises attended at maximum level
          bars2 = axes[1].bar(exercise_counts.index.get_level_values('level'), exercise_counts.values, color='green')
          axes[1].set_xlabel('Maximum Level')
          axes[1].set_ylabel('Number of Exercises Attended')
          axes[1].set_title('Number of Exercises Attended at Maximum Level')
-         axes[1].set_xticks(range(5))  # Set x-axis ticks for levels 0 to 4
+         axes[1].set_xticks(range(5))  
        
          plt.tight_layout()
          st.pyplot(fig)
 
-        
+
          ###
+
 
          st.subheader("5. Correlation Between Number of Attempts and Overall Performance:")
 
@@ -408,10 +409,8 @@ def main_content(selected_option, sub_option_a):
          df_LogProblem['total_attempts'] = df_LogProblem['total_attempt_cnt']
          df_LogProblem['overall_performance'] = (df_LogProblem['correct_attempts'] / df_LogProblem['total_attempts']) * 100
 
-         # Calculate correlation between number of attempts and overall performance
          correlation = df_LogProblem['total_attempts'].corr(df_LogProblem['overall_performance'])
 
-         # Create a scatter plot to visualize the relationship
          fig = px.scatter(df_LogProblem, x='total_attempts', y='overall_performance')
          fig.update_layout(
              xaxis_title="Number of Attempts",
@@ -479,7 +478,6 @@ def main_content(selected_option, sub_option_a):
          user_level4_encounters['proficiency_level'] = user_level4_encounters['level4_encounter_count'].apply(determine_proficiency)
          user_profiles = user_level4_encounters.merge(df_InfoUser[['uuid', 'user_grade', 'has_teacher_cnt']], on='uuid', how='left')
  
-         # Create a bar plot using Plotly Express
          fig = px.bar(user_profiles, 
              x='proficiency_level', 
              y='level4_encounter_count', 
@@ -493,7 +491,6 @@ def main_content(selected_option, sub_option_a):
              title="User's Proficiency Level vs. Number of Level 4 Encounters",
              height=600)
 
-         # Show the plot
          st.plotly_chart(fig)
 
          st.subheader("Feature that affect student;s performance:")
