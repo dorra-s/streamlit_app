@@ -140,7 +140,7 @@ def main_content(selected_option, sub_option_a):
 
     fig, ax = plt.subplots(figsize=(12, 6))
     ax.bar(filtered_missing_InfoUser.index, filtered_missing_InfoUser, label='Info_UserData.csv', color='blue', alpha=0.6)
-    ax.bar(filtered_missing_LogProblem.index, filtered_missing_LogProblem, label='Log_Problem.csv', color='lightblue', alpha=0.6)
+    ax.bar(filtered_missing_LogProblem.index, filtered_missing_LogProblem, label='Log_Problem.csv', color='orange', alpha=0.6)
     ax.bar(filtered_missing_InfoContent.index, filtered_missing_InfoContent, label='Info_Content.csv', color='green', alpha=0.6)
     plt.xlabel('Columns')
     plt.ylabel('Percentage of Missing Values')
