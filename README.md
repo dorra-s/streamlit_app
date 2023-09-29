@@ -64,7 +64,7 @@ These datasets are fictional and created for the purpose of this project. They d
 
 ## Contributors
 
-- Dorra Saadallah : (https://www.linkedin.com/in/dorra-saadallah)
+- Dorra Saadallah : ([https://www.linkedin.com/in/dorra-saadallah](https://github.com/dorra-s/streamlit_app.git))
 
 ## Feedback and Issues
 
