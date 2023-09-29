@@ -18,6 +18,8 @@ The project is structured as follows:
 
 - **Analysis Scripts**: Python scripts (`data_analysis.py`) are used to load and analyze the data files and perform data preprocessing, feature engineering, and generate insights from the raw data.
 
+- **Machine Learning Model**: The ML.py script includes the machine learning component, where a linear regression model is trained on the data to predict student outcomes.
+
 - **Requirements**: A `requirements.txt` file lists the necessary Python libraries and dependencies to run the project.
 
 ## Running the Streamlit App
